@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Mode</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="controls-bar" class="hidden">
+        <div class="controls-inner">
+            <div class="control-group">
+                <span class="label">Avancer / Reculer</span>
+                <div class="keys"><kbd id="key-forward">Z</kbd><kbd id="key-backward">S</kbd></div>
+            </div>
+            <div class="control-group">
+                <span class="label">Gauche / Droite</span>
+                <div class="keys"><kbd id="key-left">Q</kbd><kbd id="key-right">D</kbd></div>
+            </div>
+            <div class="control-group">
+                <span class="label">Monter / Descendre</span>
+                <div class="keys"><kbd id="key-up">A</kbd><kbd id="key-down">E</kbd></div>
+            </div>
+            <div class="control-group">
+                <span class="label">Rotation</span>
+                <div class="keys"><kbd id="key-roll">Flèches</kbd></div>
+            </div>
+            <div class="control-group">
+                <span class="label">Zoom</span>
+                <div class="keys"><kbd>Molette</kbd></div>
+            </div>
+            <div class="control-group">
+                <span class="label">Vitesse</span>
+                <div class="keys"><kbd id="key-speed">Shift</kbd></div>
+            </div>
+            <div class="control-group">
+                <span class="label">Définir Points</span>
+                <div class="keys"><kbd id="key-setpoint">O</kbd></div>
+            </div>
+            <div class="control-group">
+                <span class="label">Vider Transitions</span>
+                <div class="keys"><kbd id="key-clearpoints">—</kbd></div>
+            </div>
+            <div class="control-group">
+                <span class="label">Cacher UI</span>
+                <div class="keys"><kbd id="key-toggleui">K</kbd></div>
+            </div>
+            <div class="control-group">
+                <span class="label">Quitter</span>
+                <div class="keys"><kbd id="key-quit">F1</kbd></div>
+            </div>
+            <div class="control-group dof-btn-group">
+                <button id="btn-dof-toggle" class="dof-btn" title="Profondeur de champ">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                    <span>Flou & Effets</span>
+                    <kbd id="key-dof">B</kbd>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="point-indicators" class="hidden">
+        <div class="point-badge" id="badge-a">
+            <span class="point-dot dot-a"></span>
+            <span id="label-a">Point A</span>
+            <span class="point-status" id="status-a">—</span>
+        </div>
+        <div class="point-badge" id="badge-b">
+            <span class="point-dot dot-b"></span>
+            <span id="label-b">Point B</span>
+            <span class="point-status" id="status-b">—</span>
+        </div>
+        <div class="point-badge" id="badge-transition" style="display:none;">
+            <div class="transition-bar">
+                <div class="transition-fill" id="transition-fill"></div>
+            </div>
+            <span id="transition-label">En cours…</span>
+        </div>
+    </div>
+
+    <div id="ui-toast" class="ui-toast hidden">
+        <span id="ui-toast-icon"></span>
+        <span id="ui-toast-text"></span>
+    </div>
+
+    <div id="dof-panel" class="hidden">
+        <div class="dof-panel-inner">
+            <div class="dof-panel-header">
+                <div class="dof-panel-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                    Flou & Effets
+                </div>
+                <button id="dof-close" class="dof-close-btn" aria-label="Fermer">&times;</button>
+            </div>
+
+            <div class="dof-toggle-row">
+                <span class="dof-toggle-label">Activer le flou</span>
+                <label class="dof-switch">
+                    <input type="checkbox" id="dof-enabled">
+                    <span class="dof-slider-track"></span>
+                </label>
+            </div>
+
+            <div class="dof-sliders" id="dof-sliders">
+                <div class="dof-slider-row">
+                    <div class="dof-slider-header">
+                        <span class="dof-slider-label">Intensité</span>
+                        <span class="dof-slider-value" id="val-strength">1.0</span>
+                    </div>
+                    <input type="range" id="slider-strength" class="dof-range" min="0" max="3" step="0.05" value="1.0">
+                </div>
+                <div class="dof-slider-row">
+                    <div class="dof-slider-header">
+                        <span class="dof-slider-label">Flou avant (Near)</span>
+                        <span class="dof-slider-value" id="val-near">2.0</span>
+                    </div>
+                    <input type="range" id="slider-near" class="dof-range" min="0" max="30" step="0.5" value="2.0">
+                </div>
+                <div class="dof-slider-row">
+                    <div class="dof-slider-header">
+                        <span class="dof-slider-label">Flou arrière (Far)</span>
+                        <span class="dof-slider-value" id="val-far">5.0</span>
+                    </div>
+                    <input type="range" id="slider-far" class="dof-range" min="0" max="30" step="0.5" value="5.0">
+                </div>
+            </div>
+
+            <div class="dof-divider"></div>
+
+            <div class="filter-section">
+                <div class="dof-toggle-row">
+                    <span class="dof-toggle-label">Activer les filtres</span>
+                    <label class="dof-switch">
+                        <input type="checkbox" id="filter-enabled">
+                        <span class="dof-slider-track"></span>
+                    </label>
+                </div>
+                <div class="dof-slider-row" style="margin-top: 10px;">
+                    <div class="dof-slider-header">
+                        <span class="dof-slider-label">Filtre d'image</span>
+                    </div>
+                    <select id="filter-select" class="filter-select">
+                        <option value="none">Aucun</option>
+                    </select>
+                </div>
+                <div class="dof-slider-row" style="margin-top: 10px;">
+                    <div class="dof-slider-header">
+                        <span class="dof-slider-label">Intensité du filtre</span>
+                        <span class="dof-slider-value" id="val-filter-strength">1.00</span>
+                    </div>
+                    <input type="range" id="slider-filter-strength" class="dof-range" min="0" max="2" step="0.05"
+                        value="1.0">
+                </div>
+            </div>
+
+            <div class="dof-divider"></div>
+
+            <div class="shake-section">
+                <div class="dof-toggle-row">
+                    <span class="dof-toggle-label">Activer les tremblements</span>
+                    <label class="dof-switch">
+                        <input type="checkbox" id="shake-enabled">
+                        <span class="dof-slider-track"></span>
+                    </label>
+                </div>
+                <div class="dof-slider-row" style="margin-top: 10px;">
+                    <div class="dof-slider-header">
+                        <span class="dof-slider-label">Intensité des tremblements</span>
+                        <span class="dof-slider-value" id="val-shake-strength">0.50</span>
+                    </div>
+                    <input type="range" id="slider-shake-strength" class="dof-range" min="0.1" max="5.0" step="0.1"
+                        value="0.5">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="duration-modal" class="hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-box">
+            <div class="modal-title" id="modal-title">Durée de transition</div>
+            <div class="modal-subtitle" id="modal-subtitle">Définissez la durée en secondes</div>
+            <div class="input-wrapper">
+                <input type="number" id="duration-input" min="0.5" max="60" step="0.5" value="5" />
+                <span class="unit">sec</span>
+            </div>
+            <div class="modal-add-more">
+                <label class="add-more-label">
+                    <input type="checkbox" id="chk-add-more">
+                    <span class="add-more-text">Ajouter une transition suivante</span>
+                </label>
+            </div>
+            <div class="modal-actions">
+                <button id="btn-cancel" class="btn btn-ghost">Annuler</button>
+                <button id="btn-confirm" class="btn btn-confirm">Confirmer</button>
+            </div>
+            <div class="modal-hint">Entrée pour valider · Échap pour annuler</div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
