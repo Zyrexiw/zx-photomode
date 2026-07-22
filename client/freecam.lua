@@ -27,6 +27,9 @@ local filterStrength = 1.0
 local shakeEnabled  = false
 local shakeStrength = 0.5
 
+
+local unlimitedRange = false
+
 local function applyEffects()
     if not freecamCam then return end
     
@@ -117,6 +120,7 @@ local function stopFreecam()
     targetFov      = Config.DefaultFov
     camVelocity    = vector3(0.0, 0.0, 0.0)
     fovVelocity    = 0.0
+    unlimitedRange = false 
 
     local ped = PlayerPedId()
     ClearPedTasks(ped)
@@ -302,10 +306,13 @@ local function handleMovement(delta)
 
     camPos = nextPos
 
-    local dist = #(camPos - playerOriginCoords)
-    if dist > Config.MaxDistance then
-        local dir = camPos - playerOriginCoords
-        camPos = playerOriginCoords + (dir / dist) * Config.MaxDistance
+
+    if not unlimitedRange then
+        local dist = #(camPos - playerOriginCoords)
+        if dist > Config.MaxDistance then
+            local dir = camPos - playerOriginCoords
+            camPos = playerOriginCoords + (dir / dist) * Config.MaxDistance
+        end
     end
 
     local moveRoll = 0.0
@@ -399,8 +406,9 @@ RegisterCommand('photomode_cleartransitions', function()
 end, false)
 RegisterKeyMapping('photomode_cleartransitions', 'Photo Mode: Réinitialiser les transitions', 'keyboard', '')
 
+
 RegisterNetEvent('photomode:toggle')
-AddEventHandler('photomode:toggle', function()
+AddEventHandler('photomode:toggle', function(unlimited)
     local ped = PlayerPedId()
     
     if not freecamActive then
@@ -411,6 +419,7 @@ AddEventHandler('photomode:toggle', function()
     if freecamActive then
         stopFreecam()
     else
+        unlimitedRange = unlimited and true or false
         freecamActive = true
         initFreecam()
         ExecuteCommand('togglehud')
@@ -447,6 +456,16 @@ CreateThread(function()
     end
 end)
 
+
+CreateThread(function()
+    while true do
+        Wait(2000)
+        if freecamActive then
+            TriggerServerEvent('photomode:reportCamPos', camPos)
+        end
+    end
+end)
+
 exports('startFreecam', function()
     if not freecamActive then
         freecamActive = true
@@ -466,6 +485,10 @@ end)
 
 exports('getFreecamPos', function()
     return camPos
+end)
+
+exports('hasUnlimitedRange', function()
+    return unlimitedRange
 end)
 
 exports('setEffects', function(enabled, strength, near, far, fEnabled, filter, fStrength, sEnabled, sStrength)

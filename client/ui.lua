@@ -1,47 +1,7 @@
 local nuiOpen   = false
 local uiVisible = true
 
--- Table des joueurs (serverId) actuellement en mode caméra, hors soi-même
 local playersInCam = {}
-
-
-local controlIdToName = {
-    ["0"]   = "V",      ["20"]  = "Z",      ["26"]  = "C",      ["29"]  = "B",
-    ["30"]  = "D",      ["32"]  = "W",      ["33"]  = "S",      ["34"]  = "A",
-    ["44"]  = "Q",      ["45"]  = "R",      ["46"]  = "E",      ["47"]  = "G",
-    ["49"]  = "F",      ["73"]  = "X",      ["74"]  = "H",      ["182"] = "L",
-    ["244"] = "M",      ["245"] = "T",      ["246"] = "Y",      ["249"] = "N",
-    ["303"] = "U",      ["311"] = "K",
-
-    ["19"]  = "LAlt",   ["21"]  = "LShift", ["36"]  = "LCtrl",
-    ["22"]  = "Espace", ["37"]  = "Tab",    ["137"] = "Caps",
-    ["18"]  = "Entrée", ["201"] = "Entrée",
-    ["177"] = "Retour", ["178"] = "Suppr",  ["214"] = "Suppr",
-    ["199"] = "P",
-    ["200"] = "Échap",  ["322"] = "Échap",
-
-    ["172"] = "↑",      ["173"] = "↓",      ["174"] = "←",      ["175"] = "→",
-
-    ["10"]  = "PgUp",   ["11"]  = "PgDn",
-    ["213"] = "Home",
-    ["316"] = "PgUp",   ["317"] = "PgDn",
-
-    ["39"]  = "[",      ["40"]  = "]",
-    ["81"]  = ".",      ["82"]  = ",",
-    ["83"]  = "=",      ["84"]  = "-",
-    ["243"] = "~",
-
-    ["157"] = "1",      ["158"] = "2",      ["160"] = "3",      ["164"] = "4",
-    ["165"] = "5",      ["159"] = "6",      ["161"] = "7",      ["162"] = "8",
-    ["163"] = "9",
-
-    ["288"] = "F1",     ["289"] = "F2",     ["170"] = "F3",
-    ["166"] = "F5",     ["167"] = "F6",     ["168"] = "F7",     ["169"] = "F8",
-    ["56"]  = "F9",     ["57"]  = "F10",    ["344"] = "F11",
-
-    ["107"] = "Num6",   ["108"] = "Num4",   ["117"] = "Num7",   ["118"] = "Num9",
-    ["314"] = "Num+",   ["315"] = "Num-",
-}
 
 local function sendNui(data)
     SendNUIMessage(data)
@@ -53,37 +13,11 @@ local function openDurationModal()
     sendNui({ action = 'openDuration' })
 end
 
-local function getKeyNameForCommand(commandName)
-    local bindString = GetControlInstructionalButton(2, GetHashKey(commandName) | 0x80000000, true)
-    if bindString and type(bindString) == 'string' and string.len(bindString) > 2 then
-        local keyName = string.sub(bindString, 3)
-        if keyName ~= 'NONE' then
-            if controlIdToName[keyName] then
-                keyName = controlIdToName[keyName]
-            end
-            return keyName
-        end
-    end
-    return nil
-end
-
 AddEventHandler('photomode:onFreecamStart', function()
     uiVisible = true
-    
-    local dynamicKeys = {}
-    for k, v in pairs(Config.Keys) do dynamicKeys[k] = v end
-    
-    local quitKey = getKeyNameForCommand('photomode')
-    if quitKey then dynamicKeys.Quit = quitKey end
-
-    local dofKey = getKeyNameForCommand('photomode_dof')
-    if dofKey then dynamicKeys.Dof = dofKey end
-
-    local clearKey = getKeyNameForCommand('photomode_cleartransitions')
-    if clearKey then dynamicKeys.ClearPoints = clearKey end
 
     sendNui({ action = 'setFilters', filters = Config.Filters })
-    sendNui({ action = 'setKeys', keys = dynamicKeys })
+    sendNui({ action = 'setKeys', keys = Config.Keys })
     sendNui({ action = 'showUI' })
 end)
 
@@ -93,6 +27,7 @@ AddEventHandler('photomode:onFreecamStop', function()
     nuiOpen   = false
     uiVisible = true
 end)
+
 
 RegisterNetEvent('photomode:setPlayerState')
 AddEventHandler('photomode:setPlayerState', function(serverId, active)
@@ -209,6 +144,7 @@ CreateThread(function()
         Wait(0)
 
         if not exports['zx_photomode']:isFreecamActive() then goto continue end
+        if exports['zx_photomode']:hasUnlimitedRange() then goto continue end 
         local ped    = PlayerPedId()
         local origin = GetEntityCoords(ped)
         local camPos = exports['zx_photomode']:getFreecamPos()

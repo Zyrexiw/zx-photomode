@@ -74,7 +74,6 @@ function closeDurationModal(confirm) {
             body: JSON.stringify({ duration: ms, addMore: addMore })
         });
         if (!addMore) {
-            // Reset modal state for next time
             chkAddMore.checked = false;
         }
     } else {
@@ -261,7 +260,6 @@ window.addEventListener('message', (e) => {
             showToast('Transitions effacées', '🗑️', 'reset', 2000);
             break;
         case 'segmentAdded':
-            // Segment confirmed, prepare for the next one
             currentSegmentNumber = data.segmentCount + 1;
             statusA.textContent = '✓';
             statusA.classList.add('active');
